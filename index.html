@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPK Prioritas Fasilitas FT - SAW</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a', 900: '#14532d' } } } }
+        }
+    </script>
+    <style>
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .tab-content.active { display: block; opacity: 1; animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300 min-h-screen font-sans relative">
+
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2 truncate pr-4">
+                    <div class="h-8 px-2 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">TPSJ</div>
+                    <span class="font-bold text-sm sm:text-lg md:text-xl tracking-tight text-gray-900 dark:text-white truncate">Tim Proyek Sekali Jadi</span>
+                </div>
+                
+                <div class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('dashboard')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-500 text-white" data-target="dashboard">Dashboard</button>
+                    <button onclick="switchTab('perhitungan')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" data-target="perhitungan">Perhitungan</button>
+                    <button onclick="switchTab('riwayat')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" data-target="riwayat">Riwayat</button>
+                    <button onclick="switchTab('about')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" data-target="about">About</button>
+                </div>
+
+                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors">
+                    <svg id="theme-icon-light" class="w-6 h-6 hidden dark:block text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path></svg>
+                    <svg id="theme-icon-dark" class="w-6 h-6 block dark:hidden text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                </button>
+            </div>
+            
+            <div class="flex md:hidden overflow-x-auto pb-2 space-x-2 mt-2">
+                <button onclick="switchTab('dashboard')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap" data-target="dashboard">Dashboard</button>
+                <button onclick="switchTab('perhitungan')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap" data-target="perhitungan">Perhitungan</button>
+                <button onclick="switchTab('riwayat')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap" data-target="riwayat">Riwayat</button>
+                <button onclick="switchTab('about')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap" data-target="about">About</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <section id="dashboard" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 border border-gray-100 dark:border-gray-700">
+                    <div class="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs font-bold tracking-wide uppercase mb-4">Laporan</div>
+                    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">Sistem Pendukung Keputusan Penentuan Prioritas Perbaikan Fasilitas</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6 font-medium">Studi Kasus: Fakultas Teknik, Universitas Jenderal Soedirman</p>
+                    
+                    <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
+                        <p class="mb-4 text-justify">Fasilitas kampus merupakan komponen vital yang secara langsung memengaruhi kualitas proses belajar mengajar serta kenyamanan sivitas akademika. Namun pada kenyataannya, banyak perguruan tinggi menghadapi tantangan dalam menjaga kondisi fasilitas kampus tetap layak pakai di tengah keterbatasan anggaran.</p>
+                        <p class="mb-4 text-justify">Di Fakultas Teknik, terdapat berbagai fasilitas yang memerlukan perbaikan secara bersamaan, mulai dari ruangan perkuliahan, jaringan Wi-Fi, infrastruktur jalan, hingga akses pelayanan akademik.</p>
+                        <p class="text-justify">Oleh karena itu, sistem ini dirancang menggunakan metode <strong>Simple Additive Weighting (SAW)</strong>. Metode pengambilan keputusan multi-kriteria ini bekerja secara objektif dengan cara menjumlahkan bobot dari setiap kriteria untuk menentukan prioritas perbaikan yang paling mendesak dan rasional.</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-brand-600 to-brand-900 rounded-xl shadow-lg p-8 text-white flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl"></div>
+                    <h3 class="text-brand-50 font-semibold mb-2 uppercase tracking-wider text-sm">Rekomendasi Prioritas Utama</h3>
+                    <p class="text-sm mb-4 opacity-80">Berdasarkan kalkulasi data lapangan saat ini, fasilitas yang paling mendesak untuk diperbaiki adalah:</p>
+                    
+                    <div class="bg-black/20 backdrop-blur-sm rounded-lg p-5 border border-white/10 text-center mb-6 shadow-inner">
+                        <h2 id="dash-top-name" class="text-2xl font-bold mb-1">Memuat data...</h2>
+                        <div class="flex items-center justify-center space-x-2">
+                            <span class="text-sm opacity-70">Skor Preferensi (V):</span>
+                            <span id="dash-top-score" class="font-mono text-xl font-bold text-yellow-400">0.0000</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="switchTab('perhitungan')" class="w-full bg-gray-900 hover:bg-gray-800 text-white dark:bg-gray-950 dark:hover:bg-black font-bold py-3 px-4 rounded-lg transition-all shadow-lg border border-gray-700">
+                        Buat Analisis Baru &rarr;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="perhitungan" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Kalkulator Utama SPK</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Buat dan simpan data analisis yang baru melalui form di bawah ini. Data ini terpisah dari riwayat.</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Alternatif Fasilitas</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C1: Kerusakan<br><span class="text-xs text-brand-500 font-normal">Benefit (0.21)</span></th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C2: Dampak<br><span class="text-xs text-brand-500 font-normal">Benefit (0.25)</span></th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C3: Urgensi<br><span class="text-xs text-brand-500 font-normal">Benefit (0.28)</span></th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C4: Frekuensi<br><span class="text-xs text-brand-500 font-normal">Benefit (0.26)</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrix-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Hasil Perankingan Akhir</h2>
+                </div>
+                <button onclick="saveCalculationToDB()" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    <span>Simpan Di Riwayat</span>
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-brand-50 dark:bg-gray-700 border-b border-brand-100 dark:border-gray-600 text-sm">
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-center w-24">Peringkat</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200">Alternatif</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-right">Nilai Preferensi (V)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="riwayat" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Analisis </h2>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">Daftar keputusan yang telah disimpan secara permanen. Klik "Lihat / Edit" untuk melihat rincian.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Waktu Disimpan</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Prioritas Utama Terpilih</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">Skor (V)</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">Aksi CRUD</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body" class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="detail-riwayat" class="tab-content">
+            <div class="mb-6 flex flex-col md:flex-row md:justify-between md:items-center bg-blue-50 dark:bg-gray-800 p-6 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm">
+                <div>
+                    <h2 id="detail-title" class="text-2xl font-bold text-gray-900 dark:text-white">Detail & Edit Riwayat</h2>
+                    <p id="detail-date" class="text-gray-500 dark:text-gray-400 text-sm mt-1">-</p>
+                </div>
+                <button onclick="switchTab('riwayat')" class="mt-4 md:mt-0 bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow">
+                    &larr; Kembali ke Daftar Riwayat
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Alternatif Fasilitas</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C1 (0.21)</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C2 (0.25)</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C3 (0.28)</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C4 (0.26)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-matrix-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-end mb-4">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Hasil Perankingan Data Ini</h3>
+                <button id="btn-update-detail" onclick="updateHistoryDB()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Simpan Perubahan ke Database</span>
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-blue-50 dark:bg-gray-700 border-b border-blue-100 dark:border-gray-600 text-sm">
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-center w-24">Peringkat</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200">Alternatif</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-right">Nilai Preferensi (V)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-ranking-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="tab-content">
+            <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 md:p-12">
+                <div class="text-center mb-10">
+                    <img src="unsoed.png" alt="Logo Unsoed" class="w-24 h-auto mx-auto mb-4 filter drop-shadow-md">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Tim Proyek Sekali Jadi</h2>
+                    <p class="text-brand-600 dark:text-brand-400 font-medium mt-1">Program Studi Informatika - Fakultas Teknik</p>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">Universitas Jenderal Soedirman (2026/2027)</p>
+                </div>
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Anggota Kelompok</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"><div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold mr-4">1</div><div><p class="font-semibold text-gray-900 dark:text-white">Ian Jullian Sutrisno</p><p class="text-sm text-gray-500 dark:text-gray-400">H1D024039</p></div></li>
+                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"><div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 font-bold mr-4">2</div><div><p class="font-semibold text-gray-900 dark:text-white">Yusuf Rafii Ahmad</p><p class="text-sm text-gray-500 dark:text-gray-400">H1D024049</p></div></li>
+                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"><div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold mr-4">3</div><div><p class="font-semibold text-gray-900 dark:text-white">Amalia Maharani Andessy</p><p class="text-sm text-gray-500 dark:text-gray-400">H1D024032</p></div></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Dosen Pengampu</h3>
+                        <div class="flex items-center p-4 bg-brand-50 dark:bg-gray-700 rounded-lg border-l-4 border-brand-500"><div><p class="font-semibold text-gray-900 dark:text-white">Ir. Nofiyati, S. Kom., M. Kom., IPM</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="save-toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-[150] flex items-center space-x-3 pointer-events-none">
+        <div class="bg-green-500 rounded-full p-1"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+        <span id="toast-msg">Pesan sukses</span>
+    </div>
+
+    <script>
+        const weights = [0.21, 0.25, 0.28, 0.26]; 
+        const criteriaTypes = ['benefit', 'benefit', 'benefit', 'benefit']; 
+        
+        const initialData = [
+            { id: 'A1', name: 'Ruang Perkuliahan', values: [3.2, 4.2, 4.6, 4.4] },
+            { id: 'A2', name: 'Jaringan Wi-Fi/Internet', values: [3.8, 4.1, 4.7, 4.2] },
+            { id: 'A3', name: 'Infrastruktur Jalan', values: [3.8, 4.3, 4.5, 4.6] },
+            { id: 'A4', name: 'Akses Pelayanan Akademik', values: [3.0, 4.3, 4.6, 4.2] }
+        ];
+
+        // Memori Untuk Kalkulator Utama (Tab Perhitungan)
+        let currentAlternatives = JSON.parse(JSON.stringify(initialData));
+        
+        // Memori Khusus Untuk Halaman Detail/Edit Riwayat
+        let detailAlternatives = [];
+        let detailEditId = null;
+        let detailTopResult = { name: '', score: '' };
+
+        let dbHistory = []; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            renderInputTable();
+            calculateSAW();
+            fetchHistoryFromDB();
+        });
+
+        // 1. SISTEM NAVIGASI 
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.className = "nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700");
+            document.querySelectorAll('.nav-btn-mobile').forEach(btn => btn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap");
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            // Jika masuk ke halaman Detail, sorot menu Riwayat
+            let targetNav = tabId === 'detail-riwayat' ? 'riwayat' : tabId;
+            
+            const activeDesktopBtn = document.querySelector(`.nav-btn[data-target="${targetNav}"]`);
+            if (activeDesktopBtn) activeDesktopBtn.className = "nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-500 text-white";
+            const activeMobileBtn = document.querySelector(`.nav-btn-mobile[data-target="${targetNav}"]`);
+            if(activeMobileBtn) activeMobileBtn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap";
+        }
+
+        // 2. TEMA
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+        }
+
+        function toggleTheme() {
+            const htmlClasses = document.documentElement.classList;
+            if (htmlClasses.contains('dark')) { htmlClasses.remove('dark'); localStorage.setItem('theme', 'light'); } 
+            else { htmlClasses.add('dark'); localStorage.setItem('theme', 'dark'); }
+        }
+
+        // 3. KALKULATOR UTAMA
+        function renderInputTable() {
+            const tbody = document.getElementById('matrix-body');
+            tbody.innerHTML = '';
+            currentAlternatives.forEach((alt, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors";
+                let tdHtml = `<td class="p-4 font-medium text-gray-900 dark:text-white">${alt.id} - ${alt.name}</td>`;
+                alt.values.forEach((val, colIndex) => {
+                    tdHtml += `<td class="p-4"><input type="number" step="0.1" min="1" max="5" value="${val}" class="w-full max-w-[80px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" onchange="updateValue(${index}, ${colIndex}, this.value)"></td>`;
+                });
+                tr.innerHTML = tdHtml;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateValue(altIndex, colIndex, newValue) {
+            let val = parseFloat(newValue);
+            if (isNaN(val) || val < 1) val = 1; if (val > 5) val = 5;
+            currentAlternatives[altIndex].values[colIndex] = val;
+            calculateSAW();
+        }
+
+        function calculateSAW() {
+            const maxValues = Array(4).fill(-Infinity), minValues = Array(4).fill(Infinity);
+            for (let j = 0; j < 4; j++) {
+                for (let i = 0; i < currentAlternatives.length; i++) {
+                    const val = currentAlternatives[i].values[j];
+                    if (val > maxValues[j]) maxValues[j] = val;
+                    if (val < minValues[j]) minValues[j] = val;
+                }
+            }
+            const results = currentAlternatives.map(alt => {
+                let finalScore = 0;
+                for (let j = 0; j < 4; j++) {
+                    let normalized = criteriaTypes[j] === 'benefit' ? alt.values[j] / maxValues[j] : minValues[j] / alt.values[j];
+                    finalScore += normalized * weights[j];
+                }
+                return { name: alt.name, score: finalScore.toFixed(4) };
+            });
+            results.sort((a, b) => b.score - a.score);
+            renderRankingTable(results);
+            document.getElementById('dash-top-name').textContent = results[0].name;
+            document.getElementById('dash-top-score').textContent = results[0].score;
+        }
+
+        function renderRankingTable(results) {
+            const tbody = document.getElementById('ranking-body');
+            tbody.innerHTML = '';
+            results.forEach((res, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index === 0 ? "bg-brand-50/50 dark:bg-brand-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-700/50";
+                tr.innerHTML = `
+                    <td class="p-4 text-center"><span class="inline-flex items-center justify-center w-8 h-8 rounded-full ${index === 0 ? 'bg-yellow-400 text-yellow-900 font-bold' : 'bg-gray-200 dark:bg-gray-600'}">${index + 1}</span></td>
+                    <td class="p-4 font-medium ${index === 0 ? 'text-brand-700 dark:text-brand-400 font-bold' : ''}">${res.name} ${index === 0 ? '<span class="ml-2 text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded-full dark:bg-brand-900 dark:text-brand-200">Prioritas 1</span>' : ''}</td>
+                    <td class="p-4 text-right font-mono font-medium">${res.score}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 4. HALAMAN KHUSUS DETAIL RIWAYAT (BACA & EDIT DIGABUNG)
+        function openDetailHistory(index) {
+            const item = dbHistory[index];
+            if(!item || !item.matrix_state) return;
+
+            detailEditId = item.id;
+            detailAlternatives = JSON.parse(item.matrix_state);
+
+            document.getElementById('detail-date').textContent = 'Riwayat disimpan pada: ' + item.tanggal;
+
+            renderDetailMatrix();
+            calculateDetailSAW();
+
+            switchTab('detail-riwayat');
+        }
+
+        function renderDetailMatrix() {
+            const tbody = document.getElementById('detail-matrix-body');
+            tbody.innerHTML = '';
+            detailAlternatives.forEach((alt, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700/50";
+                let tdHtml = `<td class="p-4 font-medium text-gray-900 dark:text-white">${alt.id} - ${alt.name}</td>`;
+                
+                alt.values.forEach((val, colIndex) => {
+                    // Semua input selalu aktif (bisa diedit)
+                    const styleClass = 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-500 focus:ring-2 focus:ring-yellow-500';
+                    tdHtml += `<td class="p-4"><input type="number" step="0.1" min="1" max="5" value="${val}" class="w-full max-w-[80px] px-3 py-2 border rounded-md focus:outline-none transition-colors ${styleClass}" onchange="updateDetailValue(${index}, ${colIndex}, this.value)"></td>`;
+                });
+                tr.innerHTML = tdHtml;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateDetailValue(altIndex, colIndex, newValue) {
+            let val = parseFloat(newValue);
+            if (isNaN(val) || val < 1) val = 1; if (val > 5) val = 5;
+            detailAlternatives[altIndex].values[colIndex] = val;
+            calculateDetailSAW(); 
+        }
+
+        function calculateDetailSAW() {
+            const maxValues = Array(4).fill(-Infinity), minValues = Array(4).fill(Infinity);
+            for (let j = 0; j < 4; j++) {
+                for (let i = 0; i < detailAlternatives.length; i++) {
+                    const val = detailAlternatives[i].values[j];
+                    if (val > maxValues[j]) maxValues[j] = val;
+                    if (val < minValues[j]) minValues[j] = val;
+                }
+            }
+            const results = detailAlternatives.map(alt => {
+                let finalScore = 0;
+                for (let j = 0; j < 4; j++) {
+                    let normalized = criteriaTypes[j] === 'benefit' ? alt.values[j] / maxValues[j] : minValues[j] / alt.values[j];
+                    finalScore += normalized * weights[j];
+                }
+                return { name: alt.name, score: finalScore.toFixed(4) };
+            });
+            results.sort((a, b) => b.score - a.score);
+            
+            detailTopResult.name = results[0].name;
+            detailTopResult.score = results[0].score;
+
+            const tbody = document.getElementById('detail-ranking-body');
+            tbody.innerHTML = '';
+            results.forEach((res, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index === 0 ? "bg-blue-50/50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-700/50";
+                tr.innerHTML = `
+                    <td class="p-4 text-center"><span class="inline-flex items-center justify-center w-8 h-8 rounded-full ${index === 0 ? 'bg-yellow-400 text-yellow-900 font-bold' : 'bg-gray-200 dark:bg-gray-600'}">${index + 1}</span></td>
+                    <td class="p-4 font-medium ${index === 0 ? 'text-blue-700 dark:text-blue-400 font-bold' : ''}">${res.name} ${index === 0 ? '<span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full dark:bg-blue-900 dark:text-blue-200">Prioritas 1</span>' : ''}</td>
+                    <td class="p-4 text-right font-mono font-medium">${res.score}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+
+        // 5. DATABASE CRUD
+        async function fetchHistoryFromDB() {
+            try {
+                const response = await fetch('api.php?action=read');
+                dbHistory = await response.json();
+                renderHistoryTable();
+            } catch (error) { console.error("Gagal load DB", error); }
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-body');
+            tbody.innerHTML = '';
+            if (dbHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-500 italic">Belum ada data di database. Buat analisis baru di menu Perhitungan.</td></tr>`;
+                return;
+            }
+            dbHistory.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700/50";
+                tr.innerHTML = `
+                    <td class="p-4 text-sm">${item.tanggal}</td>
+                    <td class="p-4 font-medium">${item.prioritas_utama}</td>
+                    <td class="p-4 text-center font-mono">${item.skor}</td>
+                    <td class="p-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="openDetailHistory(${index})" class="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-1.5 rounded font-medium transition-colors">Lihat / Edit</button>
+                            <button onclick="deleteHistoryDB(${item.id})" class="text-xs bg-red-100 text-red-700 hover:bg-red-200 px-4 py-1.5 rounded font-medium transition-colors">Hapus</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function saveCalculationToDB() {
+            const topName = document.getElementById('dash-top-name').textContent;
+            const topScore = document.getElementById('dash-top-score').textContent;
+            const now = new Date();
+            const record = {
+                tanggal: now.toLocaleString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                prioritas: topName,
+                skor: topScore,
+                matrix: currentAlternatives
+            };
+
+            const response = await fetch('api.php?action=create', { method: 'POST', body: JSON.stringify(record) });
+            const result = await response.json();
+            
+            if(result.status === 'success') {
+                showToast("Analisis baru berhasil disimpan ke Database!", "bg-brand-500");
+                fetchHistoryFromDB();
+            }
+        }
+
+        async function updateHistoryDB() {
+            if(!detailEditId) return;
+            const record = {
+                id: detailEditId,
+                prioritas: detailTopResult.name,
+                skor: detailTopResult.score,
+                matrix: detailAlternatives
+            };
+
+            const response = await fetch('api.php?action=update', { method: 'POST', body: JSON.stringify(record) });
+            const result = await response.json();
+            
+            if(result.status === 'success') {
+                showToast("Perubahan riwayat berhasil diupdate ke Database!", "bg-yellow-500");
+                fetchHistoryFromDB();
+                switchTab('riwayat');
+            }
+        }
+
+        async function deleteHistoryDB(id) {
+            if(confirm("Yakin ingin menghapus riwayat ini dari database secara permanen?")) {
+                const response = await fetch('api.php?action=delete', { method: 'POST', body: JSON.stringify({ id: id }) });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    showToast("Riwayat berhasil dihapus.", "bg-red-500");
+                    fetchHistoryFromDB();
+                }
+            }
+        }
+
+        function showToast(message, bgColorClass = "bg-green-500") {
+            const toast = document.getElementById('save-toast');
+            document.getElementById('toast-msg').textContent = message;
+            toast.querySelector('div').className = `${bgColorClass} rounded-full p-1`;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
+    </script>
+</body>
+</html>
