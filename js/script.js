@@ -1,5 +1,5 @@
-const weights = [0.21, 0.25, 0.28, 0.26]; 
-const criteriaTypes = ['benefit', 'benefit', 'benefit', 'benefit']; 
+const weights = [0.21, 0.25, 0.28, 0.26];
+const criteriaTypes = ['benefit', 'benefit', 'benefit', 'benefit'];
 
 const initialData = [
     { id: 'A1', name: 'Ruang Perkuliahan', values: [3.2, 4.2, 4.6, 4.4] },
@@ -9,7 +9,7 @@ const initialData = [
 ];
 
 let currentAlternatives = JSON.parse(JSON.stringify(initialData));
-let dbHistory = []; 
+let dbHistory = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
@@ -22,13 +22,13 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(btn => btn.className = "nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700");
     document.querySelectorAll('.nav-btn-mobile').forEach(btn => btn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap");
-    
+
     document.getElementById(tabId).classList.add('active');
-    
+
     const activeDesktopBtn = document.querySelector(`.nav-btn[data-target="${tabId}"]`);
     if (activeDesktopBtn) activeDesktopBtn.className = "nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-500 text-white";
     const activeMobileBtn = document.querySelector(`.nav-btn-mobile[data-target="${tabId}"]`);
-    if(activeMobileBtn) activeMobileBtn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap";
+    if (activeMobileBtn) activeMobileBtn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap";
 }
 
 function initTheme() {
@@ -39,7 +39,7 @@ function initTheme() {
 
 function toggleTheme() {
     const htmlClasses = document.documentElement.classList;
-    if (htmlClasses.contains('dark')) { htmlClasses.remove('dark'); localStorage.setItem('theme', 'light'); } 
+    if (htmlClasses.contains('dark')) { htmlClasses.remove('dark'); localStorage.setItem('theme', 'light'); }
     else { htmlClasses.add('dark'); localStorage.setItem('theme', 'dark'); }
 }
 
@@ -131,22 +131,22 @@ async function saveCalculationToDB() {
         body: JSON.stringify(record)
     });
     const result = await response.json();
-    
-    if(result.status === 'success') {
+
+    if (result.status === 'success') {
         showToast("Perubahan berhasil diupdate!", "bg-blue-600");
         fetchHistoryFromDB();
     }
 }
 
 async function deleteHistoryDB(id) {
-    if(confirm("Yakin ingin menghapus riwayat ini dari database?")) {
+    if (confirm("Yakin ingin menghapus riwayat ini dari database?")) {
         const response = await fetch('api.php?action=delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })
         });
         const result = await response.json();
-        if(result.status === 'success') {
+        if (result.status === 'success') {
             showToast("Riwayat berhasil dihapus.", "bg-red-500");
             fetchHistoryFromDB();
         }
@@ -155,7 +155,7 @@ async function deleteHistoryDB(id) {
 
 function editHistoryDB(index) {
     const historyItem = dbHistory[index];
-    if(historyItem && historyItem.matrix_state) {
+    if (historyItem && historyItem.matrix_state) {
         currentAlternatives = JSON.parse(historyItem.matrix_state);
         renderInputTable();
         calculateSAW();

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="id" class="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPK Prioritas Fasilitas FT - SAW</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -12,151 +14,555 @@
         }
     </script>
     <style>
-        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
-        .tab-content.active { display: block; opacity: 1; animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+
+        /* CSS Khusus Mode Cetak (Phase 4) */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 1.5cm;
+            }
+
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            /* Sembunyikan elemen yang tidak perlu dicetak */
+            nav,
+            .nav-btn,
+            .nav-btn-mobile,
+            #dashboard,
+            #riwayat,
+            #detail-riwayat,
+            #about,
+            button,
+            #step-stepper,
+            #save-toast {
+                display: none !important;
+            }
+
+            /* Tampilkan hanya tab perhitungan */
+            #perhitungan {
+                display: block !important;
+                opacity: 1 !important;
+            }
+
+            /* Atur warna dan bayangan agar tinta hemat */
+            .shadow-sm,
+            .shadow-lg,
+            .shadow-xl {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+
+            .bg-white,
+            .dark\:bg-gray-800 {
+                background: white !important;
+                color: black !important;
+            }
+
+            .dark\:text-white,
+            .text-gray-900,
+            .text-white {
+                color: black !important;
+            }
+
+            /* Atur layout print-header */
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+
+            /* Paksa tabel agar tidak terpotong */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 1.5rem;
+                page-break-inside: auto;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            th,
+            td {
+                border: 1px solid #000 !important;
+                padding: 8px !important;
+            }
+
+            /* Grid statistik di-adjust untuk kertas */
+            #stat-cards-container {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px;
+            }
+
+            #chart-bar-vi,
+            #chart-radar-kriteria {
+                max-height: 250px !important;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300 min-h-screen font-sans relative">
+
+<body
+    class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300 min-h-screen font-sans relative">
 
     <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-2 truncate pr-4">
-                    <div class="h-8 px-2 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">TPSJ</div>
-                    <span class="font-bold text-sm sm:text-lg md:text-xl tracking-tight text-gray-900 dark:text-white truncate">Tim Proyek Sekali Jadi</span>
-                </div>
-                
-                <div class="hidden md:flex space-x-1">
-                    <button onclick="switchTab('dashboard')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-500 text-white" data-target="dashboard">Dashboard</button>
-                    <button onclick="switchTab('perhitungan')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" data-target="perhitungan">Perhitungan</button>
-                    <button onclick="switchTab('riwayat')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" data-target="riwayat">Riwayat</button>
-                    <button onclick="switchTab('about')" class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" data-target="about">About</button>
+                    <div
+                        class="h-8 px-2 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">
+                        TPSJ</div>
+                    <span
+                        class="font-bold text-sm sm:text-lg md:text-xl tracking-tight text-gray-900 dark:text-white truncate">Tim
+                        Proyek Sekali Jadi</span>
                 </div>
 
-                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors">
-                    <svg id="theme-icon-light" class="w-6 h-6 hidden dark:block text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path></svg>
-                    <svg id="theme-icon-dark" class="w-6 h-6 block dark:hidden text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <div class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('dashboard')"
+                        class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-500 text-white"
+                        data-target="dashboard">Dashboard</button>
+                    <button onclick="switchTab('perhitungan')"
+                        class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        data-target="perhitungan">Perhitungan</button>
+                    <button onclick="switchTab('riwayat')"
+                        class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        data-target="riwayat">Riwayat</button>
+                    <button onclick="switchTab('about')"
+                        class="nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        data-target="about">About</button>
+                </div>
+
+                <button onclick="toggleTheme()"
+                    class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors">
+                    <svg id="theme-icon-light" class="w-6 h-6 hidden dark:block text-yellow-400" fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="theme-icon-dark" class="w-6 h-6 block dark:hidden text-gray-500" fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
                 </button>
             </div>
-            
+
             <div class="flex md:hidden overflow-x-auto pb-2 space-x-2 mt-2">
-                <button onclick="switchTab('dashboard')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap" data-target="dashboard">Dashboard</button>
-                <button onclick="switchTab('perhitungan')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap" data-target="perhitungan">Perhitungan</button>
-                <button onclick="switchTab('riwayat')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap" data-target="riwayat">Riwayat</button>
-                <button onclick="switchTab('about')" class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap" data-target="about">About</button>
+                <button onclick="switchTab('dashboard')"
+                    class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap"
+                    data-target="dashboard">Dashboard</button>
+                <button onclick="switchTab('perhitungan')"
+                    class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap"
+                    data-target="perhitungan">Perhitungan</button>
+                <button onclick="switchTab('riwayat')"
+                    class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap"
+                    data-target="riwayat">Riwayat</button>
+                <button onclick="switchTab('about')"
+                    class="nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap"
+                    data-target="about">About</button>
             </div>
         </div>
     </nav>
 
     <main class="max-w-6xl mx-auto px-4 py-8">
-        
+
         <section id="dashboard" class="tab-content active">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 border border-gray-100 dark:border-gray-700">
-                    <div class="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs font-bold tracking-wide uppercase mb-4">Laporan</div>
-                    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">Sistem Pendukung Keputusan Penentuan Prioritas Perbaikan Fasilitas</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mb-6 font-medium">Studi Kasus: Fakultas Teknik, Universitas Jenderal Soedirman</p>
-                    
+                <div
+                    class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 border border-gray-100 dark:border-gray-700">
+                    <div
+                        class="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs font-bold tracking-wide uppercase mb-4">
+                        Laporan Eksekutif</div>
+                    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">Sistem
+                        Pendukung Keputusan Penentuan Prioritas Perbaikan Fasilitas</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6 font-medium">Studi Kasus: Fakultas Teknik,
+                        Universitas Jenderal Soedirman</p>
+
                     <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
-                        <p class="mb-4 text-justify">Fasilitas kampus merupakan komponen vital yang secara langsung memengaruhi kualitas proses belajar mengajar serta kenyamanan sivitas akademika. Namun pada kenyataannya, banyak perguruan tinggi menghadapi tantangan dalam menjaga kondisi fasilitas kampus tetap layak pakai di tengah keterbatasan anggaran.</p>
-                        <p class="mb-4 text-justify">Di Fakultas Teknik, terdapat berbagai fasilitas yang memerlukan perbaikan secara bersamaan, mulai dari ruangan perkuliahan, jaringan Wi-Fi, infrastruktur jalan, hingga akses pelayanan akademik.</p>
-                        <p class="text-justify">Oleh karena itu, sistem ini dirancang menggunakan metode <strong>Simple Additive Weighting (SAW)</strong>. Metode pengambilan keputusan multi-kriteria ini bekerja secara objektif dengan cara menjumlahkan bobot dari setiap kriteria untuk menentukan prioritas perbaikan yang paling mendesak dan rasional.</p>
+                        <p class="mb-4 text-justify">Fasilitas kampus merupakan komponen vital yang secara langsung
+                            memengaruhi kualitas proses belajar mengajar serta kenyamanan sivitas akademika. Namun pada
+                            kenyataannya, banyak perguruan tinggi menghadapi tantangan dalam menjaga kondisi fasilitas
+                            kampus tetap layak pakai di tengah keterbatasan anggaran.</p>
+                        <p class="mb-4 text-justify">Di Fakultas Teknik, terdapat berbagai fasilitas yang memerlukan
+                            perbaikan secara bersamaan, mulai dari ruangan perkuliahan, jaringan Wi-Fi, infrastruktur
+                            jalan, hingga akses pelayanan akademik.</p>
+                        <p class="text-justify">Oleh karena itu, sistem ini dirancang menggunakan metode <strong>Simple
+                                Additive Weighting (SAW)</strong>. Metode pengambilan keputusan multi-kriteria ini
+                            bekerja secara objektif dengan cara menjumlahkan bobot dari setiap kriteria untuk menentukan
+                            prioritas perbaikan yang paling mendesak dan rasional.</p>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-brand-600 to-brand-900 rounded-xl shadow-lg p-8 text-white flex flex-col justify-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl"></div>
-                    <h3 class="text-brand-50 font-semibold mb-2 uppercase tracking-wider text-sm">Rekomendasi Prioritas Utama</h3>
-                    <p class="text-sm mb-4 opacity-80">Berdasarkan kalkulasi data lapangan saat ini, fasilitas yang paling mendesak untuk diperbaiki adalah:</p>
-                    
-                    <div class="bg-black/20 backdrop-blur-sm rounded-lg p-5 border border-white/10 text-center mb-6 shadow-inner">
+                <div
+                    class="bg-gradient-to-br from-brand-600 to-brand-900 rounded-xl shadow-lg p-8 text-white flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl">
+                    </div>
+                    <h3 class="text-brand-50 font-semibold mb-2 uppercase tracking-wider text-sm">Rekomendasi Prioritas
+                        Utama</h3>
+                    <p class="text-sm mb-4 opacity-80">Berdasarkan kalkulasi data lapangan saat ini, fasilitas yang
+                        paling mendesak untuk diperbaiki adalah:</p>
+
+                    <div
+                        class="bg-black/20 backdrop-blur-sm rounded-lg p-5 border border-white/10 text-center mb-6 shadow-inner">
                         <h2 id="dash-top-name" class="text-2xl font-bold mb-1">Memuat data...</h2>
                         <div class="flex items-center justify-center space-x-2">
                             <span class="text-sm opacity-70">Skor Preferensi (V):</span>
-                            <span id="dash-top-score" class="font-mono text-xl font-bold text-yellow-400">0.0000</span>
+                            <span id="dash-top-score" class="font-mono text-xl font-bold text-yellow-400">0.00000</span>
                         </div>
                     </div>
-                    
-                    <button onclick="switchTab('perhitungan')" class="w-full bg-gray-900 hover:bg-gray-800 text-white dark:bg-gray-950 dark:hover:bg-black font-bold py-3 px-4 rounded-lg transition-all shadow-lg border border-gray-700">
+
+                    <button onclick="switchTab('perhitungan')"
+                        class="w-full bg-gray-900 hover:bg-gray-800 text-white dark:bg-gray-950 dark:hover:bg-black font-bold py-3 px-4 rounded-lg transition-all shadow-lg border border-gray-700">
                         Buat Analisis Baru &rarr;
                     </button>
+                </div>
+            </div>
+
+            <div class="mt-8 w-full">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Ringkasan Analitik Sistem</h2>
+
+                <div id="dash-stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div
+                        class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+                            <h3 class="font-bold text-gray-800 dark:text-white">Posisi Peringkat Fasilitas</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300">
+                                    <tr>
+                                        <th class="p-4 font-semibold">Rank</th>
+                                        <th class="p-4 font-semibold">Alternatif</th>
+                                        <th class="p-4 font-semibold text-center">Skor V</th>
+                                        <th class="p-4 font-semibold w-1/3">Persentase Capaian</th>
+                                        <th class="p-4 font-semibold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dash-ranking-mini" class="divide-y divide-gray-100 dark:divide-gray-700">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
+                        <h3 class="font-bold text-gray-800 dark:text-white mb-4">Grafik Skor Akhir</h3>
+                        <div class="relative w-full flex-grow min-h-[180px]">
+                            <canvas id="dash-mini-chart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section id="perhitungan" class="tab-content">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Kalkulator Utama SPK</h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Buat dan simpan data analisis yang baru melalui form di bawah ini. Data ini terpisah dari riwayat.</p>
+            <div class="print-header hidden border-b-2 border-gray-800 pb-4 mb-8">
+                <div class="flex items-center justify-center space-x-4 mb-4">
+                    <img src="unsoed.png" alt="Logo Unsoed" class="w-20 h-20 grayscale">
+                    <div class="text-left text-black">
+                        <h1 class="text-xl font-bold uppercase">Laporan Analisis SPK - Metode SAW</h1>
+                        <h2 class="text-lg font-semibold">Prioritas Perbaikan Fasilitas Fakultas Teknik</h2>
+                        <p class="text-sm">Universitas Jenderal Soedirman</p>
+                        <p class="text-sm mt-1 font-medium">Tim Peneliti: Ian Jullian S., Yusuf Rafii A., Amalia
+                            Maharani A.</p>
+                    </div>
+                </div>
+                <p class="text-sm text-center italic text-black">Dicetak pada: <span id="print-date"></span></p>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Kalkulator Utama SPK</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Buat dan simpan data analisis yang baru melalui form di
+                    bawah ini. Data ini terpisah dari riwayat.</p>
+            </div>
+
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                            <tr
+                                class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
                                 <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Alternatif Fasilitas</th>
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C1: Kerusakan<br><span class="text-xs text-brand-500 font-normal">Benefit (0.21)</span></th>
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C2: Dampak<br><span class="text-xs text-brand-500 font-normal">Benefit (0.25)</span></th>
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C3: Urgensi<br><span class="text-xs text-brand-500 font-normal">Benefit (0.28)</span></th>
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C4: Frekuensi<br><span class="text-xs text-brand-500 font-normal">Benefit (0.26)</span></th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 cursor-help"
+                                    title="Skala 1-5: 1=Sangat Rendah, 2=Rendah, 3=Sedang, 4=Tinggi, 5=Sangat Tinggi">
+                                    C1: Tingkat Kerusakan<br><span class="text-xs text-brand-500 font-normal">Benefit
+                                        (0.21)</span></th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 cursor-help"
+                                    title="Skala 1-5: 1=Sangat Rendah, 2=Rendah, 3=Sedang, 4=Tinggi, 5=Sangat Tinggi">
+                                    C2: Skala Dampak Pengguna<br><span
+                                        class="text-xs text-brand-500 font-normal">Benefit (0.25)</span></th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 cursor-help"
+                                    title="Skala 1-5: 1=Sangat Rendah, 2=Rendah, 3=Sedang, 4=Tinggi, 5=Sangat Tinggi">
+                                    C3: Urgensi Akademik<br><span class="text-xs text-brand-500 font-normal">Benefit
+                                        (0.28)</span></th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 cursor-help"
+                                    title="Skala 1-5: 1=Sangat Rendah, 2=Rendah, 3=Sedang, 4=Tinggi, 5=Sangat Tinggi">
+                                    C4: Frekuensi Penggunaan<br><span class="text-xs text-brand-500 font-normal">Benefit
+                                        (0.26)</span></th>
                             </tr>
                         </thead>
                         <tbody id="matrix-body" class="divide-y divide-gray-200 dark:divide-gray-700">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="flex justify-between items-end mb-4">
+            <div id="step-stepper"
+                class="flex flex-wrap items-center justify-center gap-2 mb-8 mt-8 text-sm font-medium text-gray-500 dark:text-gray-400">
+                <div class="flex items-center text-brand-600 dark:text-brand-400"><span
+                        class="flex items-center justify-center w-6 h-6 mr-2 border-2 border-brand-600 dark:border-brand-400 rounded-full">1</span>
+                    Input Data</div>
+                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <div class="flex items-center text-brand-600 dark:text-brand-400"><span
+                        class="flex items-center justify-center w-6 h-6 mr-2 border-2 border-brand-600 dark:border-brand-400 rounded-full">2</span>
+                    Matriks X</div>
+                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <div class="flex items-center text-brand-600 dark:text-brand-400"><span
+                        class="flex items-center justify-center w-6 h-6 mr-2 border-2 border-brand-600 dark:border-brand-400 rounded-full">3</span>
+                    Normalisasi R</div>
+                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <div class="flex items-center text-brand-600 dark:text-brand-400"><span
+                        class="flex items-center justify-center w-6 h-6 mr-2 border-2 border-brand-600 dark:border-brand-400 rounded-full">4</span>
+                    Ranking V</div>
+            </div>
+
+            <div id="calculation-steps-container" class="space-y-8 mb-8">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="font-bold text-gray-800 dark:text-white">Langkah 2: Matriks Keputusan (X)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Alternatif</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C1</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C2</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C3</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C4</th>
+                                </tr>
+                            </thead>
+                            <tbody id="step-matrix-x" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                            <tfoot id="step-matrix-x-foot"
+                                class="bg-yellow-50 dark:bg-yellow-900/20 font-bold border-t-2 border-yellow-200 dark:border-yellow-700">
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="font-bold text-gray-800 dark:text-white">Langkah 3: Matriks Normalisasi (R)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Alternatif</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C1</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C2</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C3</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">C4</th>
+                                </tr>
+                            </thead>
+                            <tbody id="step-matrix-r" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                            <tfoot id="step-matrix-r-foot"
+                                class="bg-gray-50 dark:bg-gray-700/80 font-bold border-t-2 border-gray-200 dark:border-gray-600">
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="font-bold text-gray-800 dark:text-white">Langkah 4: Menghitung Nilai Preferensi Akhir
+                            (V)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Alternatif</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">w1×r1
+                                    </th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">w2×r2
+                                    </th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">w3×r3
+                                    </th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">w4×r4
+                                    </th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-right">Total V_i
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="step-matrix-v" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Hasil Perankingan Akhir</h2>
                 </div>
-                <button onclick="saveCalculationToDB()" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors flex items-center space-x-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    <span>Simpan Di Riwayat</span>
-                </button>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="resetToInitial()"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2.5 rounded-lg font-medium shadow-sm transition-colors text-sm flex items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg>
+                        <span>Reset Data</span>
+                    </button>
+                    <button onclick="printLaporan()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg font-medium shadow-sm transition-colors text-sm flex items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                            </path>
+                        </svg>
+                        <span>Cetak Laporan</span>
+                    </button>
+                    <button onclick="saveCalculationToDB()"
+                        class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-lg font-medium shadow-sm transition-colors text-sm flex items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                            </path>
+                        </svg>
+                        <span>Simpan Di Riwayat</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-brand-50 dark:bg-gray-700 border-b border-brand-100 dark:border-gray-600 text-sm">
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-center w-24">Peringkat</th>
+                            <tr
+                                class="bg-brand-50 dark:bg-gray-700 border-b border-brand-100 dark:border-gray-600 text-sm">
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-center w-24">
+                                    Peringkat</th>
                                 <th class="p-4 font-semibold text-gray-700 dark:text-gray-200">Alternatif</th>
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-right">Nilai Preferensi (V)</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-right">Nilai
+                                    Preferensi (V)</th>
                             </tr>
                         </thead>
                         <tbody id="ranking-body" class="divide-y divide-gray-200 dark:divide-gray-700">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
+
+            <div class="mt-12 space-y-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Statistik Deskriptif Kriteria</h3>
+                    <div id="stat-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">Perbandingan Nilai
+                            Preferensi Akhir (V)</h3>
+                        <div class="relative w-full h-[250px]">
+                            <canvas id="chart-bar-vi"></canvas>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">Profil Penilaian
+                            Alternatif per Kriteria</h3>
+                        <div class="relative w-full h-[300px]">
+                            <canvas id="chart-radar-kriteria"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </section>
 
         <section id="riwayat" class="tab-content">
             <div class="max-w-4xl mx-auto">
                 <div class="mb-8">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Analisis </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mt-2">Daftar keputusan yang telah disimpan secara permanen. Klik "Lihat / Edit" untuk melihat rincian.</p>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Analisis (Database MySQL)</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">Daftar keputusan yang telah disimpan secara
+                        permanen. Klik "Lihat / Edit" untuk melihat rincian.</p>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                                <tr
+                                    class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
                                     <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Waktu Disimpan</th>
-                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Prioritas Utama Terpilih</th>
-                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">Skor (V)</th>
-                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">Aksi CRUD</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Prioritas Utama
+                                        Terpilih</th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">Skor (V)
+                                    </th>
+                                    <th class="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">Aksi CRUD
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody id="history-body" class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
-                                </tbody>
+                            <tbody id="history-body"
+                                class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -164,21 +570,26 @@
         </section>
 
         <section id="detail-riwayat" class="tab-content">
-            <div class="mb-6 flex flex-col md:flex-row md:justify-between md:items-center bg-blue-50 dark:bg-gray-800 p-6 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm">
+            <div
+                class="mb-6 flex flex-col md:flex-row md:justify-between md:items-center bg-blue-50 dark:bg-gray-800 p-6 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm">
                 <div>
-                    <h2 id="detail-title" class="text-2xl font-bold text-gray-900 dark:text-white">Detail & Edit Riwayat</h2>
+                    <h2 id="detail-title" class="text-2xl font-bold text-gray-900 dark:text-white">Detail & Edit Riwayat
+                    </h2>
                     <p id="detail-date" class="text-gray-500 dark:text-gray-400 text-sm mt-1">-</p>
                 </div>
-                <button onclick="switchTab('riwayat')" class="mt-4 md:mt-0 bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow">
+                <button onclick="switchTab('riwayat')"
+                    class="mt-4 md:mt-0 bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow">
                     &larr; Kembali ke Daftar Riwayat
                 </button>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
+                            <tr
+                                class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm">
                                 <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">Alternatif Fasilitas</th>
                                 <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C1 (0.21)</th>
                                 <th class="p-4 font-semibold text-gray-700 dark:text-gray-300">C2 (0.25)</th>
@@ -187,56 +598,102 @@
                             </tr>
                         </thead>
                         <tbody id="detail-matrix-body" class="divide-y divide-gray-200 dark:divide-gray-700">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
 
             <div class="flex justify-between items-end mb-4">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white">Hasil Perankingan Data Ini</h3>
-                <button id="btn-update-detail" onclick="updateHistoryDB()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors flex items-center space-x-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <button id="btn-update-detail" onclick="updateHistoryDB()"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
                     <span>Simpan Perubahan ke Database</span>
                 </button>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-blue-50 dark:bg-gray-700 border-b border-blue-100 dark:border-gray-600 text-sm">
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-center w-24">Peringkat</th>
+                            <tr
+                                class="bg-blue-50 dark:bg-gray-700 border-b border-blue-100 dark:border-gray-600 text-sm">
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-center w-24">
+                                    Peringkat</th>
                                 <th class="p-4 font-semibold text-gray-700 dark:text-gray-200">Alternatif</th>
-                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-right">Nilai Preferensi (V)</th>
+                                <th class="p-4 font-semibold text-gray-700 dark:text-gray-200 text-right">Nilai
+                                    Preferensi (V)</th>
                             </tr>
                         </thead>
                         <tbody id="detail-ranking-body" class="divide-y divide-gray-200 dark:divide-gray-700">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
         <section id="about" class="tab-content">
-            <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 md:p-12">
+            <div
+                class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 md:p-12">
                 <div class="text-center mb-10">
                     <img src="unsoed.png" alt="Logo Unsoed" class="w-24 h-auto mx-auto mb-4 filter drop-shadow-md">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Tim Proyek Sekali Jadi</h2>
-                    <p class="text-brand-600 dark:text-brand-400 font-medium mt-1">Program Studi Informatika - Fakultas Teknik</p>
+                    <p class="text-brand-600 dark:text-brand-400 font-medium mt-1">Program Studi Informatika - Fakultas
+                        Teknik</p>
                     <p class="text-gray-500 dark:text-gray-400 text-sm">Universitas Jenderal Soedirman (2026/2027)</p>
                 </div>
                 <div class="space-y-8">
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Anggota Kelompok</h3>
+                        <h3
+                            class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                            Anggota Kelompok</h3>
                         <ul class="space-y-4">
-                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"><div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold mr-4">1</div><div><p class="font-semibold text-gray-900 dark:text-white">Ian Jullian Sutrisno</p><p class="text-sm text-gray-500 dark:text-gray-400">H1D024039</p></div></li>
-                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"><div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 font-bold mr-4">2</div><div><p class="font-semibold text-gray-900 dark:text-white">Yusuf Rafii Ahmad</p><p class="text-sm text-gray-500 dark:text-gray-400">H1D024049</p></div></li>
-                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"><div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold mr-4">3</div><div><p class="font-semibold text-gray-900 dark:text-white">Amalia Maharani Andessy</p><p class="text-sm text-gray-500 dark:text-gray-400">H1D024032</p></div></li>
+                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold mr-4">
+                                    1</div>
+                                <div>
+                                    <p class="font-semibold text-gray-900 dark:text-white">Ian Jullian Sutrisno</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">H1D024039</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 font-bold mr-4">
+                                    2</div>
+                                <div>
+                                    <p class="font-semibold text-gray-900 dark:text-white">Yusuf Rafii Ahmad</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">H1D024049</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold mr-4">
+                                    3</div>
+                                <div>
+                                    <p class="font-semibold text-gray-900 dark:text-white">Amalia Maharani Andessy</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">H1D024032</p>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Dosen Pengampu</h3>
-                        <div class="flex items-center p-4 bg-brand-50 dark:bg-gray-700 rounded-lg border-l-4 border-brand-500"><div><p class="font-semibold text-gray-900 dark:text-white">Ir. Nofiyati, S. Kom., M. Kom., IPM</p></div></div>
+                        <h3
+                            class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                            Dosen Pengampu</h3>
+                        <div
+                            class="flex items-center p-4 bg-brand-50 dark:bg-gray-700 rounded-lg border-l-4 border-brand-500">
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Ir. Nofiyati, S. Kom., M. Kom.,
+                                    IPM</p>
+                                <p class="text-sm text-brand-600 dark:text-brand-400 mt-1">Pembimbing Proyek SPK</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -244,31 +701,37 @@
 
     </main>
 
-    <div id="save-toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-[150] flex items-center space-x-3 pointer-events-none">
-        <div class="bg-green-500 rounded-full p-1"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+    <div id="save-toast"
+        class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-[150] flex items-center space-x-3 pointer-events-none">
+        <div class="bg-green-500 rounded-full p-1"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg></div>
         <span id="toast-msg">Pesan sukses</span>
     </div>
 
     <script>
-        const weights = [0.21, 0.25, 0.28, 0.26]; 
-        const criteriaTypes = ['benefit', 'benefit', 'benefit', 'benefit']; 
-        
+        const weights = [0.21, 0.25, 0.28, 0.26];
+        const criteriaTypes = ['benefit', 'benefit', 'benefit', 'benefit'];
+
+        // Data matriks presisi tinggi (3 desimal) sesuai file Excel PDF
         const initialData = [
-            { id: 'A1', name: 'Ruang Perkuliahan', values: [3.2, 4.2, 4.6, 4.4] },
-            { id: 'A2', name: 'Jaringan Wi-Fi/Internet', values: [3.8, 4.1, 4.7, 4.2] },
-            { id: 'A3', name: 'Infrastruktur Jalan', values: [3.8, 4.3, 4.5, 4.6] },
-            { id: 'A4', name: 'Akses Pelayanan Akademik', values: [3.0, 4.3, 4.6, 4.2] }
+            { id: 'A1', name: 'Ruang Perkuliahan', values: [3.2, 4.2, 4.6, 4.367] },
+            { id: 'A2', name: 'Jaringan Wi-Fi/Internet', values: [3.767, 4.1, 4.667, 4.167] },
+            { id: 'A3', name: 'Infrastruktur Jalan', values: [3.8, 4.267, 4.533, 4.567] },
+            { id: 'A4', name: 'Akses Pelayanan Akademik', values: [3.0, 4.3, 4.6, 4.167] }
         ];
 
-        // Memori Untuk Kalkulator Utama (Tab Perhitungan)
         let currentAlternatives = JSON.parse(JSON.stringify(initialData));
-        
-        // Memori Khusus Untuk Halaman Detail/Edit Riwayat
+
         let detailAlternatives = [];
         let detailEditId = null;
         let detailTopResult = { name: '', score: '' };
+        let dbHistory = [];
 
-        let dbHistory = []; 
+        let chartBarVi = null;
+        let chartRadar = null;
+        let chartDashMini = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
@@ -277,24 +740,23 @@
             fetchHistoryFromDB();
         });
 
-        // 1. SISTEM NAVIGASI 
+        // ============================
+        // 1. SISTEM NAVIGASI & TEMA
+        // ============================
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.className = "nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700");
             document.querySelectorAll('.nav-btn-mobile').forEach(btn => btn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 whitespace-nowrap");
-            
+
             document.getElementById(tabId).classList.add('active');
-            
-            // Jika masuk ke halaman Detail, sorot menu Riwayat
+
             let targetNav = tabId === 'detail-riwayat' ? 'riwayat' : tabId;
-            
             const activeDesktopBtn = document.querySelector(`.nav-btn[data-target="${targetNav}"]`);
             if (activeDesktopBtn) activeDesktopBtn.className = "nav-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-500 text-white";
             const activeMobileBtn = document.querySelector(`.nav-btn-mobile[data-target="${targetNav}"]`);
-            if(activeMobileBtn) activeMobileBtn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap";
+            if (activeMobileBtn) activeMobileBtn.className = "nav-btn-mobile px-3 py-1 rounded-full text-xs font-medium bg-brand-500 text-white whitespace-nowrap";
         }
 
-        // 2. TEMA
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
@@ -303,11 +765,17 @@
 
         function toggleTheme() {
             const htmlClasses = document.documentElement.classList;
-            if (htmlClasses.contains('dark')) { htmlClasses.remove('dark'); localStorage.setItem('theme', 'light'); } 
-            else { htmlClasses.add('dark'); localStorage.setItem('theme', 'dark'); }
+            if (htmlClasses.contains('dark')) {
+                htmlClasses.remove('dark'); localStorage.setItem('theme', 'light');
+            } else {
+                htmlClasses.add('dark'); localStorage.setItem('theme', 'dark');
+            }
+            if (document.getElementById('chart-bar-vi')) calculateSAW();
         }
 
-        // 3. KALKULATOR UTAMA
+        // ============================
+        // 2. KALKULATOR UTAMA (SAW)
+        // ============================
         function renderInputTable() {
             const tbody = document.getElementById('matrix-body');
             tbody.innerHTML = '';
@@ -316,7 +784,8 @@
                 tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors";
                 let tdHtml = `<td class="p-4 font-medium text-gray-900 dark:text-white">${alt.id} - ${alt.name}</td>`;
                 alt.values.forEach((val, colIndex) => {
-                    tdHtml += `<td class="p-4"><input type="number" step="0.1" min="1" max="5" value="${val}" class="w-full max-w-[80px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" onchange="updateValue(${index}, ${colIndex}, this.value)"></td>`;
+                    // Pakai step 0.001 untuk 3 desimal
+                    tdHtml += `<td class="p-4"><input type="number" step="0.001" min="1" max="5" value="${val}" class="w-full max-w-[80px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" onchange="updateValue(${index}, ${colIndex}, this.value)"></td>`;
                 });
                 tr.innerHTML = tdHtml;
                 tbody.appendChild(tr);
@@ -339,18 +808,94 @@
                     if (val < minValues[j]) minValues[j] = val;
                 }
             }
-            const results = currentAlternatives.map(alt => {
+            const rawResults = currentAlternatives.map(alt => {
                 let finalScore = 0;
                 for (let j = 0; j < 4; j++) {
                     let normalized = criteriaTypes[j] === 'benefit' ? alt.values[j] / maxValues[j] : minValues[j] / alt.values[j];
                     finalScore += normalized * weights[j];
                 }
-                return { name: alt.name, score: finalScore.toFixed(4) };
+                return { name: alt.name, score: finalScore.toFixed(5) };
             });
-            results.sort((a, b) => b.score - a.score);
-            renderRankingTable(results);
-            document.getElementById('dash-top-name').textContent = results[0].name;
-            document.getElementById('dash-top-score').textContent = results[0].score;
+
+            renderCalculationSteps(currentAlternatives, maxValues, rawResults);
+
+            const sortedResults = [...rawResults].sort((a, b) => b.score - a.score);
+
+            renderRankingTable(sortedResults);
+            document.getElementById('dash-top-name').textContent = sortedResults[0].name;
+            document.getElementById('dash-top-score').textContent = sortedResults[0].score;
+
+            renderStatCards(currentAlternatives);
+            renderCharts(currentAlternatives, sortedResults);
+            updateDashboard(sortedResults);
+        }
+
+        // ============================
+        // 3. RENDER TABEL STEP-BY-STEP
+        // ============================
+        function renderCalculationSteps(alts, maxVals, rawResults) {
+            const tbodyX = document.getElementById('step-matrix-x');
+            const tfootX = document.getElementById('step-matrix-x-foot');
+            tbodyX.innerHTML = '';
+
+            alts.forEach(alt => {
+                let tr = `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td class="p-4 font-medium text-gray-900 dark:text-white">${alt.name}</td>`;
+                alt.values.forEach(v => { tr += `<td class="p-4 text-center font-mono">${v.toFixed(3)}</td>`; });
+                tr += `</tr>`;
+                tbodyX.innerHTML += tr;
+            });
+
+            let footTrX = `<tr><td class="p-4 text-yellow-700 dark:text-yellow-400 font-bold">Max (Benefit)</td>`;
+            maxVals.forEach(m => { footTrX += `<td class="p-4 text-center text-yellow-700 dark:text-yellow-400 font-bold font-mono">${m.toFixed(3)}</td>`; });
+            footTrX += `</tr>`;
+            tfootX.innerHTML = footTrX;
+
+            const tbodyR = document.getElementById('step-matrix-r');
+            const tfootR = document.getElementById('step-matrix-r-foot');
+            tbodyR.innerHTML = '';
+
+            alts.forEach(alt => {
+                let tr = `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td class="p-4 font-medium text-gray-900 dark:text-white">${alt.name}</td>`;
+                alt.values.forEach((v, i) => {
+                    let r = v / maxVals[i];
+                    let isMax = Math.abs(r - 1.0) < 0.0001;
+                    let cellClass = isMax ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-bold rounded' : '';
+                    tr += `<td class="p-4 text-center font-mono"><span class="${cellClass} px-2 py-1">${r.toFixed(4)}</span></td>`;
+                });
+                tr += `</tr>`;
+                tbodyR.innerHTML += tr;
+            });
+
+            let footTrR = `<tr><td class="p-4 text-gray-700 dark:text-gray-300">Bobot (w_j)</td>`;
+            weights.forEach(w => { footTrR += `<td class="p-4 text-center text-brand-600 dark:text-brand-400 font-mono">${w.toFixed(2)}</td>`; });
+            footTrR += `</tr>`;
+            tfootR.innerHTML = footTrR;
+
+            let highestV = Math.max(...rawResults.map(r => parseFloat(r.score)));
+            const tbodyV = document.getElementById('step-matrix-v');
+            tbodyV.innerHTML = '';
+
+            alts.forEach((alt, index) => {
+                let totalV = parseFloat(rawResults[index].score);
+                let isHighest = Math.abs(totalV - highestV) < 0.00001;
+                let rowClass = isHighest ? 'bg-green-100 dark:bg-green-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50';
+
+                let tr = `<tr class="${rowClass} transition-colors">
+                    <td class="p-4 font-medium text-gray-900 dark:text-white">${alt.name}</td>`;
+
+                alt.values.forEach((v, i) => {
+                    let r = v / maxVals[i];
+                    let multiplied = weights[i] * r;
+                    tr += `<td class="p-4 text-center text-sm font-mono text-gray-600 dark:text-gray-400">${multiplied.toFixed(4)}</td>`;
+                });
+
+                let valClass = isHighest ? 'font-bold text-green-700 dark:text-green-400 bg-green-200 dark:bg-green-800/50 px-3 py-1 rounded' : 'font-bold text-gray-900 dark:text-white';
+                tr += `<td class="p-4 text-right font-mono"><span class="${valClass}">${totalV.toFixed(5)}</span></td></tr>`;
+
+                tbodyV.innerHTML += tr;
+            });
         }
 
         function renderRankingTable(results) {
@@ -368,19 +913,208 @@
             });
         }
 
-        // 4. HALAMAN KHUSUS DETAIL RIWAYAT (BACA & EDIT DIGABUNG)
+        // ============================
+        // 4. RENDER VISUAL & STATISTIK
+        // ============================
+        function renderStatCards(alts) {
+            const container = document.getElementById('stat-cards-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const criteriaNames = ['C1: Tingkat Kerusakan', 'C2: Skala Dampak', 'C3: Urgensi Akademik', 'C4: Frekuensi'];
+
+            for (let j = 0; j < 4; j++) {
+                const values = alts.map(a => a.values[j]);
+                const max = Math.max(...values);
+                const min = Math.min(...values);
+                const mean = values.reduce((a, b) => a + b, 0) / values.length;
+                const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+                const sd = Math.sqrt(variance);
+
+                const cardHtml = `
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 relative overflow-hidden">
+                        <div class="absolute right-0 top-0 w-2 h-full bg-brand-500 opacity-80"></div>
+                        <h4 class="font-bold text-gray-800 dark:text-white text-base mb-1 truncate">${criteriaNames[j]}</h4>
+                        <p class="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider mb-3 border-b border-gray-100 dark:border-gray-700 pb-2">Bobot: ${weights[j].toFixed(2)}</p>
+                        <ul class="text-sm space-y-1.5 text-gray-600 dark:text-gray-300">
+                            <li class="flex justify-between"><span>Rata-rata:</span> <span class="font-mono font-bold">${mean.toFixed(2)}</span></li>
+                            <li class="flex justify-between"><span>Max:</span> <span class="font-mono font-medium">${max.toFixed(2)}</span></li>
+                            <li class="flex justify-between"><span>Min:</span> <span class="font-mono font-medium">${min.toFixed(2)}</span></li>
+                            <li class="flex justify-between"><span>SD:</span> <span class="font-mono font-medium">±${sd.toFixed(2)}</span></li>
+                        </ul>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            }
+        }
+
+        function renderCharts(alts, sortedResults) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#9ca3af' : '#4b5563';
+            const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+            Chart.defaults.color = textColor;
+            Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
+
+            const ctxBar = document.getElementById('chart-bar-vi');
+            if (ctxBar) {
+                if (chartBarVi) chartBarVi.destroy();
+                const labelsBar = sortedResults.map(r => r.name);
+                const dataBar = sortedResults.map(r => parseFloat(r.score));
+                const colorsBar = sortedResults.map((r, i) => i === 0 ? '#22c55e' : (isDark ? '#4b5563' : '#d1d5db'));
+
+                chartBarVi = new Chart(ctxBar.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labelsBar, datasets: [{ label: 'Nilai Preferensi (V)', data: dataBar, backgroundColor: colorsBar, borderRadius: 4 }] },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => 'Skor V: ' + ctx.raw.toFixed(5) } } },
+                        scales: { x: { grid: { color: gridColor }, min: Math.max(0, Math.min(...dataBar) - 0.05) }, y: { grid: { display: false } } }
+                    }
+                });
+            }
+
+            const ctxRadar = document.getElementById('chart-radar-kriteria');
+            if (ctxRadar) {
+                if (chartRadar) chartRadar.destroy();
+                const radarColors = [
+                    { border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.2)' },
+                    { border: '#22c55e', bg: 'rgba(34, 197, 94, 0.2)' },
+                    { border: '#eab308', bg: 'rgba(234, 179, 8, 0.2)' },
+                    { border: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' }
+                ];
+
+                const datasetsRadar = alts.map((alt, index) => ({
+                    label: alt.name,
+                    data: alt.values,
+                    borderColor: radarColors[index].border,
+                    backgroundColor: radarColors[index].bg,
+                    borderWidth: 2, pointBackgroundColor: radarColors[index].border,
+                }));
+
+                chartRadar = new Chart(ctxRadar.getContext('2d'), {
+                    type: 'radar',
+                    data: { labels: ['C1 Kerusakan', 'C2 Dampak', 'C3 Urgensi', 'C4 Frekuensi'], datasets: datasetsRadar },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { r: { min: 1, max: 5, ticks: { stepSize: 1, backdropColor: 'transparent' }, grid: { color: gridColor }, angleLines: { color: gridColor } } }
+                    }
+                });
+            }
+        }
+
+        // ============================
+        // 5. UPDATE DASHBOARD
+        // ============================
+        function updateDashboard(sortedResults) {
+            const maxScore = Math.max(...sortedResults.map(r => parseFloat(r.score)));
+            const minScore = Math.min(...sortedResults.map(r => parseFloat(r.score)));
+            const gapScore = maxScore - minScore;
+
+            const grid = document.getElementById('dash-stats-grid');
+            if (grid) {
+                grid.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm text-center relative overflow-hidden">
+                        <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Alternatif</div>
+                        <div class="text-3xl font-black text-blue-600 dark:text-blue-400">${currentAlternatives.length}</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm text-center relative overflow-hidden">
+                        <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Kriteria</div>
+                        <div class="text-3xl font-black text-purple-600 dark:text-purple-400">4</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm text-center relative overflow-hidden">
+                        <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Skor Tertinggi</div>
+                        <div class="text-3xl font-black text-green-600 dark:text-green-400">${maxScore.toFixed(5)}</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm text-center relative overflow-hidden">
+                        <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Gap Skor</div>
+                        <div class="text-3xl font-black text-orange-500 dark:text-orange-400">${gapScore.toFixed(5)}</div>
+                    </div>
+                `;
+            }
+
+            const tbody = document.getElementById('dash-ranking-mini');
+            if (tbody) {
+                tbody.innerHTML = '';
+                sortedResults.forEach((res, index) => {
+                    const rank = index + 1;
+                    let badge = '', barColor = '';
+                    if (rank === 1) {
+                        badge = '<span class="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 text-xs font-bold px-2.5 py-1 rounded flex items-center inline-flex">🥇 PRIORITAS UTAMA</span>';
+                        barColor = 'bg-brand-500';
+                    } else if (rank === 2) {
+                        badge = '<span class="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 text-xs font-medium px-2.5 py-1 rounded">Prioritas 2</span>';
+                        barColor = 'bg-blue-400';
+                    } else {
+                        badge = `<span class="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 text-xs font-medium px-2.5 py-1 rounded">Prioritas ${rank}</span>`;
+                        barColor = 'bg-gray-400 dark:bg-gray-500';
+                    }
+                    const widthPercent = (parseFloat(res.score) / maxScore) * 100;
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors text-gray-800 dark:text-gray-200">
+                            <td class="p-4 text-center font-bold">${rank}</td>
+                            <td class="p-4 font-medium">${res.name}</td>
+                            <td class="p-4 text-center font-mono">${res.score}</td>
+                            <td class="p-4">
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                    <div class="${barColor} h-2.5 rounded-full transition-all duration-500" style="width: ${widthPercent}%"></div>
+                                </div>
+                            </td>
+                            <td class="p-4">${badge}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const ctxDash = document.getElementById('dash-mini-chart');
+            if (ctxDash) {
+                if (chartDashMini) chartDashMini.destroy();
+                const labelsDash = sortedResults.map(r => r.name.split(' ')[0] + (r.name.includes('Wi-Fi') ? ' Wi-Fi' : ''));
+                const dataDash = sortedResults.map(r => parseFloat(r.score));
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#9ca3af' : '#4b5563';
+                const colorsDash = sortedResults.map((r, i) => i === 0 ? '#22c55e' : (isDark ? '#4b5563' : '#d1d5db'));
+
+                chartDashMini = new Chart(ctxDash.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labelsDash, datasets: [{ data: dataDash, backgroundColor: colorsDash, borderRadius: 4 }] },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { display: false, min: Math.max(0, Math.min(...dataDash) - 0.05) }, y: { grid: { display: false }, border: { display: false }, ticks: { color: textColor, font: { size: 11 } } } }
+                    }
+                });
+            }
+        }
+
+        // ============================
+        // 6. HALAMAN DETAIL RIWAYAT
+        // ============================
         function openDetailHistory(index) {
             const item = dbHistory[index];
-            if(!item || !item.matrix_state) return;
+            if (!item) return;
+
+            // Jika matrix_state kosong (biasanya pada data riwayat lama)
+            if (!item.matrix_state) {
+                alert("Detail nilai matriks tidak tersedia! Riwayat ini kemungkinan adalah data lama yang disimpan sebelum fitur matriks ditambahkan ke database.");
+                return;
+            }
 
             detailEditId = item.id;
-            detailAlternatives = JSON.parse(item.matrix_state);
+
+            // Parsing JSON dengan aman
+            try {
+                detailAlternatives = typeof item.matrix_state === 'string' ? JSON.parse(item.matrix_state) : item.matrix_state;
+            } catch (error) {
+                alert("Gagal memuat detail karena format data di database rusak/tidak valid.");
+                console.error(error);
+                return;
+            }
 
             document.getElementById('detail-date').textContent = 'Riwayat disimpan pada: ' + item.tanggal;
-
             renderDetailMatrix();
             calculateDetailSAW();
-
             switchTab('detail-riwayat');
         }
 
@@ -391,11 +1125,10 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700/50";
                 let tdHtml = `<td class="p-4 font-medium text-gray-900 dark:text-white">${alt.id} - ${alt.name}</td>`;
-                
+
                 alt.values.forEach((val, colIndex) => {
-                    // Semua input selalu aktif (bisa diedit)
                     const styleClass = 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-500 focus:ring-2 focus:ring-yellow-500';
-                    tdHtml += `<td class="p-4"><input type="number" step="0.1" min="1" max="5" value="${val}" class="w-full max-w-[80px] px-3 py-2 border rounded-md focus:outline-none transition-colors ${styleClass}" onchange="updateDetailValue(${index}, ${colIndex}, this.value)"></td>`;
+                    tdHtml += `<td class="p-4"><input type="number" step="0.001" min="1" max="5" value="${val}" class="w-full max-w-[80px] px-3 py-2 border rounded-md focus:outline-none transition-colors ${styleClass}" onchange="updateDetailValue(${index}, ${colIndex}, this.value)"></td>`;
                 });
                 tr.innerHTML = tdHtml;
                 tbody.appendChild(tr);
@@ -406,7 +1139,7 @@
             let val = parseFloat(newValue);
             if (isNaN(val) || val < 1) val = 1; if (val > 5) val = 5;
             detailAlternatives[altIndex].values[colIndex] = val;
-            calculateDetailSAW(); 
+            calculateDetailSAW();
         }
 
         function calculateDetailSAW() {
@@ -424,10 +1157,10 @@
                     let normalized = criteriaTypes[j] === 'benefit' ? alt.values[j] / maxValues[j] : minValues[j] / alt.values[j];
                     finalScore += normalized * weights[j];
                 }
-                return { name: alt.name, score: finalScore.toFixed(4) };
+                return { name: alt.name, score: finalScore.toFixed(5) };
             });
             results.sort((a, b) => b.score - a.score);
-            
+
             detailTopResult.name = results[0].name;
             detailTopResult.score = results[0].score;
 
@@ -445,14 +1178,61 @@
             });
         }
 
+        // ============================
+        // 7. FUNGSI EKSTRA (RESET & PRINT)
+        // ============================
+        function resetToInitial() {
+            currentAlternatives = JSON.parse(JSON.stringify(initialData));
+            renderInputTable();
+            calculateSAW();
+            showToast("Nilai berhasil direset ke data awal jurnal.", "bg-gray-600");
+        }
 
-        // 5. DATABASE CRUD
+        function printLaporan() {
+            const now = new Date();
+            const dateStr = now.toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const printDateEl = document.getElementById('print-date');
+            if (printDateEl) printDateEl.textContent = dateStr + " WIB";
+
+            const previousTab = document.querySelector('.tab-content.active').id;
+            if (previousTab !== 'perhitungan') switchTab('perhitungan');
+
+            setTimeout(() => {
+                window.print();
+                if (previousTab !== 'perhitungan') switchTab(previousTab);
+            }, 500);
+        }
+
+        // ============================
+        // 8. DATABASE CRUD
+        // ============================
         async function fetchHistoryFromDB() {
+            const tbody = document.getElementById('history-body');
+
+            // Tampilkan Skeleton Animation
+            tbody.innerHTML = `
+                <tr>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-48"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 mx-auto"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mx-auto"></div></td>
+                </tr>
+                <tr>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-28"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-40"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-14 mx-auto"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mx-auto"></div></td>
+                </tr>
+            `;
+
             try {
                 const response = await fetch('api.php?action=read');
                 dbHistory = await response.json();
                 renderHistoryTable();
-            } catch (error) { console.error("Gagal load DB", error); }
+            } catch (error) {
+                console.error("Gagal load DB", error);
+                tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-red-500 italic">Gagal memuat data dari database. Pastikan koneksi server atau file api.php berjalan normal.</td></tr>';
+            }
         }
 
         function renderHistoryTable() {
@@ -493,15 +1273,15 @@
 
             const response = await fetch('api.php?action=create', { method: 'POST', body: JSON.stringify(record) });
             const result = await response.json();
-            
-            if(result.status === 'success') {
+
+            if (result.status === 'success') {
                 showToast("Analisis baru berhasil disimpan ke Database!", "bg-brand-500");
                 fetchHistoryFromDB();
             }
         }
 
         async function updateHistoryDB() {
-            if(!detailEditId) return;
+            if (!detailEditId) return;
             const record = {
                 id: detailEditId,
                 prioritas: detailTopResult.name,
@@ -511,8 +1291,8 @@
 
             const response = await fetch('api.php?action=update', { method: 'POST', body: JSON.stringify(record) });
             const result = await response.json();
-            
-            if(result.status === 'success') {
+
+            if (result.status === 'success') {
                 showToast("Perubahan riwayat berhasil diupdate ke Database!", "bg-yellow-500");
                 fetchHistoryFromDB();
                 switchTab('riwayat');
@@ -520,10 +1300,10 @@
         }
 
         async function deleteHistoryDB(id) {
-            if(confirm("Yakin ingin menghapus riwayat ini dari database secara permanen?")) {
+            if (confirm("Yakin ingin menghapus riwayat ini dari database secara permanen?")) {
                 const response = await fetch('api.php?action=delete', { method: 'POST', body: JSON.stringify({ id: id }) });
                 const result = await response.json();
-                if(result.status === 'success') {
+                if (result.status === 'success') {
                     showToast("Riwayat berhasil dihapus.", "bg-red-500");
                     fetchHistoryFromDB();
                 }
@@ -539,4 +1319,5 @@
         }
     </script>
 </body>
+
 </html>
